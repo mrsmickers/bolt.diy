@@ -1,3 +1,5 @@
+version: '3.9'
+
 services:
   app-prod:
     image: bolt-ai:production
@@ -36,12 +38,14 @@ services:
   app-dev:
     image: bolt-ai:development
     build:
+      context: .
+      dockerfile: Dockerfile
       target: bolt-ai-development
     env_file: '.env.local'
     environment:
       - NODE_ENV=development
       - VITE_HMR_PROTOCOL=ws
-      - VITE_HMR_HOST=localhost
+      - VITE_HMR_HOST=0.0.0.0
       - VITE_HMR_PORT=5173
       - CHOKIDAR_USEPOLLING=true
       - WATCHPACK_POLLING=true
@@ -62,16 +66,13 @@ services:
       - RUNNING_IN_DOCKER=true
     extra_hosts:
       - 'host.docker.internal:host-gateway'
-    volumes:
-      - type: bind
-        source: .
-        target: /app
-        consistency: cached
-      - /app/node_modules
+    # Removed volumes mount to avoid shadowing the built code
     ports:
       - '5173:5173'
     command: pnpm run dev --host 0.0.0.0
-    profiles: ['development', 'default']
+    profiles:
+      - development
+      - default
 
   app-prebuild:
     image: ghcr.io/stackblitz-labs/bolt.diy:latest
